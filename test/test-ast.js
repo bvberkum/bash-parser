@@ -425,6 +425,41 @@ test('command with stderr redirection to file', t => {
 	});
 });
 
+// FIXME: see issue #45
+/* test('command with stderr redirection to file (II)', t => {
+	const result = bashParser('echo 1 > file.txt');
+	utils.logResults(result);
+	utils.checkResults(t, result, {
+		type: 'Script',
+		commands: [
+			{
+				type: 'Command',
+				name: {
+					text: 'echo',
+					type: 'Word'
+				},
+				suffix: [
+					{
+						text: '1',
+						type: 'Word'
+					},
+					{
+						type: 'Redirect',
+						op: {
+							text: '>',
+							type: 'great'
+						},
+						file: {
+							text: 'file.txt',
+							type: 'Word'
+						}
+					}
+				]
+			}
+		]
+	});
+}); */
+
 test('parse subshell', t => {
 	const result = bashParser('( ls )');
 
@@ -439,3 +474,104 @@ test('parse subshell', t => {
 		}]
 	});
 });
+
+test('parse subshell (II)', t => {
+	const result = bashParser('echo $( ls )');
+
+	utils.checkResults(t, result, {
+		type: 'Script',
+		commands: [
+			{
+				type: 'Command',
+				name: {
+					text: 'echo',
+					type: 'Word'
+				},
+				suffix: [
+					{
+						text: '$( ls )',
+						expansion: [
+							{
+								loc: {
+									start: 0,
+									end: 6
+								},
+								command: ' ls ',
+								type: 'CommandExpansion',
+								commandAST: {
+									type: 'Script',
+									commands: [
+										{
+											type: 'Command',
+											name: {
+												text: 'ls',
+												type: 'Word'
+											}
+										}
+									]
+								}
+							}
+						],
+						type: 'Word'
+					}
+				]
+			}
+		]
+	});
+});
+
+// TODO: test nested subshells #50
+/*
+test('parse nested subshell', t => {
+	const result = bashParser('echo $(dirname $(dirname ./mydir ))');
+
+	utils.checkResults(t, result, {
+		type: 'Script',
+		commands: [
+			{
+				type: 'Command',
+				name: {
+					text: 'echo',
+					type: 'Word'
+				},
+				suffix: [
+					{
+						text: '$(dirname $(dirname ./mydir )))',
+						expansion: [
+							{
+								loc: {
+									start: 0,
+									end: 6
+								},
+								command: 'dirname $(dirname ./mydir )',
+								type: 'CommandExpansion',
+								commandAST: {
+									type: 'Script',
+									commands: [
+										{
+											type: 'Command',
+											name: {
+												text: '...',
+												type: 'Word'
+											}
+										}
+									]
+								}
+							}
+						],
+						type: 'Word'
+					}
+				]
+			}
+		]
+	});
+});
+*/
+
+// TODO: test heredocs and herestrings
+/*
+
+const ast = parse('grep "x" <<HERE\nfoo\nHERE\n')
+
+const ast = parse('grep "x" <<< "$foo"')
+*/
